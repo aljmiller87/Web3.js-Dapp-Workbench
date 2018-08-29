@@ -22,8 +22,7 @@ export default class SetupAndVersion extends Component {
 
   componentWillMount() {
     console.log(this.props);
-    if(this.state.autoRetrieveFlag) {
-      this.doGetAccounts();
+    if(this.props.state.autoRetrieveFlag) {
       this.doGetNodeStatus();
       this.getMiningStatus();
       this.getSyncingStatus();
@@ -94,10 +93,10 @@ export default class SetupAndVersion extends Component {
     web3.eth.getSyncing(function(error, result) {
       if(error) {
         console.log("syncing error: ", error);
-        // that.setState({syncingStatus: error});
+        that.setState({syncingStatus: error});
       } else {
         console.log("syncing result: ", result);
-        // that.setState({syncingStatus: result});
+        that.setState({syncingStatus: result});
       }
     });
     web3.eth.isSyncing(function(error, sync){
@@ -111,12 +110,7 @@ export default class SetupAndVersion extends Component {
         // show sync info
         } else if(sync) {
           // object received
-          let syncDetails = {
-            currentBlock: sync.currentBlock,
-            highestBlock: sync.highestBlock,
-            startingBlock: sync.startingBlock
-          }
-          that.setState({syncingStatus: syncDetails});
+          that.setState({syncingStatus: sync});
         // re-gain app operation
         } else {
           // false received
@@ -126,8 +120,7 @@ export default class SetupAndVersion extends Component {
 
         }
       } else {
-        console.log("SYNCHING: ERROR");
-        console.log(error);
+        console.log("SYNCHING ERROR: ", error);
         that.setState({syncing: {error: error}});
 
       }
@@ -136,21 +129,21 @@ export default class SetupAndVersion extends Component {
 
 
   render() {
-    // console.log('SetupAndVersion props', props);
-    let connectStatus = props.state.connectedToEthereum = true ? 'Connected To Ethereum' : 'Not Connected';
-    let connectStatusClass = props.state.connectedToEthereum = true ? 'ready' : 'notready';
-    let getPeerCount = props.state.peerCount == undefined ? 'No peers' : props.state.peerCount;
-    let getPeerCountClass = props.state.peerCount == undefined ? 'notready' : 'ready';
-    let nodeVersion = props.state.nodeType == undefined ? 'Not connected' : props.state.nodeType;
-    let nodeVersionClass = props.state.nodeType == undefined ? 'notready' : 'ready';
-    let miningStatus = props.state.miningStatus == false ? 'Not Mining' : 'Mining';
-    let syncingStatus = props.state.syncingStatus == undefined ? 'Not Syncing' : 'Syncing';
+    // console.log('SetupAndVersion this.props', this.props);
+    let connectStatus = this.state.connectedToEthereum = true ? 'Connected To Ethereum' : 'Not Connected';
+    let connectStatusClass = this.state.connectedToEthereum = true ? 'ready' : 'notready';
+    let getPeerCount = this.state.peerCount == undefined ? 'No peers' : this.state.peerCount;
+    let getPeerCountClass = this.state.peerCount == undefined ? 'notready' : 'ready';
+    let nodeVersion = this.state.nodeType == undefined ? 'Not connected' : this.state.nodeType;
+    let nodeVersionClass = this.state.nodeType == undefined ? 'notready' : 'ready';
+    let miningStatus = this.state.miningStatus == false ? 'Not Mining' : 'Mining';
+    let syncingStatus = this.state.syncingStatus == undefined ? 'Not Syncing' : 'Syncing';
     let line = '';
     let currentBlock = 1;
     let highestBlock = 100;
-    if (props.state.syncingStatus !== undefined) {
-      currentBlock = props.state.syncingStatus.currentBlock;
-      highestBlock = props.state.syncingStatus.highestBlock;
+    if (this.props.state.syncingStatus !== undefined) {
+      currentBlock = this.props.state.syncingStatus.currentBlock;
+      highestBlock = this.props.state.syncingStatus.highestBlock;
       line =  <Line percent={(currentBlock)/highestBlock*100} strokeWidth="4" strokeColor="#42ebf4" />;
     }
 
@@ -169,21 +162,21 @@ export default class SetupAndVersion extends Component {
           <span>Provider</span>
           <span><input type='text' id='provider_url' defaultValue='http://localhost:8545'/></span>
           <span>
-            <button onClick={props.reConnect}>Connect</button>
+            <button onClick={this.props.reConnect}>Connect</button>
           </span>
         </div>
         {/* version */}
         <div className="sidekick">
           <h1>Version</h1>
-          <p className={nodeVersionClass} id='version_information'>{props.state.nodeType}</p>
+          <p className={nodeVersionClass} id='version_information'>{this.state.nodeType}</p>
         </div>
         <div className="sidekick">
           <h1>Status</h1>
           <h3>Peers</h3>
           <p>
-            <button onClick={props.getNodeStatus}>Node Status</button>
+            <button onClick={this.props.getNodeStatus}>Node Status</button>
           </p>
-          <p id="get_peer_count" className={getPeerCountClass}>Peers: {props.state.peerCount}</p>
+          <p id="get_peer_count" className={getPeerCountClass}>Peers: {this.state.peerCount}</p>
           <h3>Mining</h3>
           <p>Mining Status: {miningStatus}</p>
           <h3>Syncing</h3>

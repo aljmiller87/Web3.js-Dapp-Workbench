@@ -4,14 +4,105 @@ export default class Accounts extends Component {
 	constructor(props) {
 		super();
 		this.state = {
-			accounts: undefined
+			accounts: {}
 		}
+
+		this.doGetAccounts = this.doGetAccounts.bind(this);
+	    this.doGetBalance = this.doGetBalance.bind(this);
+	    this.getAccountsandBalances = this.getAccountsandBalances.bind(this);
+
 	}
 
-	componentDidUpdate() {
-		console.log('Account componentDidUpdate called. Props: ', this.props);
-		
+	componentWillMount() {
+		this.doGetAccounts();
+	}
 
+	doGetAccounts() {
+	    console.log("called doGetAccounts");
+	    const that = this;
+	    // This is the synch call for getting the accounts
+	    var accounts = web3.eth.accounts;
+	    console.log('sync accounts', accounts);
+	  
+	    // Asynchronous call to get the accounts
+	    // result = [Array of accounts]
+	    // MetaMask returns 1 account in the array - that is the currently selected account
+	    web3.eth.getAccounts(function (error, result) {
+	      if (error) {
+	          console.log('accounts_count', error, true);
+	      } else {
+	        accounts = result;
+	        console.log('accounts_count', result.length, false);
+	        // You need to have at least 1 account to proceed
+	        if(result.length == 0) {
+	          if(that.state.nodeType.toLowerCase().includes('metamask')){
+	              alert('Unlock MetaMask *and* click \'Get Accounts\'');
+	          }
+	          return;
+	        }
+
+	        // var coinbase = web3.eth.coinbase;
+	        // trim it so as to fit in the window/UI
+	        // if(coinbase) coinbase = coinbase.substring(0,25)+'...'
+	        // setData('coinbase', coinbase, false);
+	        // set the default accounts
+	        var defaultAccount = web3.eth.defaultAccount;
+	        if(!defaultAccount){
+	          web3.eth.defaultAccount =  result[0];
+	          defaultAccount = '[Undef]' + result[0];
+	        }
+
+	        defaultAccount = defaultAccount.substring(0,25)+'...';
+	        console.log('defaultAccount', defaultAccount, false);
+	        that.getAccountsandBalances(accounts);
+	      }
+	        
+	    });
+	 }
+
+	doGetBalance(account) {
+	    const that = this;
+	    return new Promise(function(resolve, reject){
+	        let balance = web3.eth.getBalance(account,web3.eth.defaultBlock, function(error, result){
+	            if (error) {
+	                reject('error');
+	            } else {
+	                let balance = web3.fromWei(result,'ether').toFixed(4);
+	                resolve(balance);
+	            }
+	        })
+	    })
+	    .then(function(result) {
+	        console.log('balance', result);
+	        let accountDetails = [account, result];
+	        // that.setState({ accounts: [...that.state.accounts, accountDetails] })
+	        return (accountDetails);
+	    })
+	    .catch(function(error) {
+	        console.log('error: ', error);
+	    }) 
+	}
+
+	getAccountsandBalances(accounts) {
+	    const that = this;
+
+	    let balancePromises = accounts.map(account => this.doGetBalance(account));
+
+	    Promise.all(balancePromises)
+	      .then(accounts => {
+	        console.log('promise all responses: ', accounts);
+	        const accountObj = {};
+	        accounts.map(account => {
+	        	let address = account[0];
+	        	let balance = account[1];
+	        	accountObj[address]= balance;
+	        })
+	        return accountObj;
+	      })
+	      .then(response => {
+	      	console.log('response should be accountObj', response);
+	      	that.setState({ accounts: response })
+	      })
 	}
 
 	render() {

@@ -23,7 +23,6 @@ class App extends Component {
       contract_bytecode: '0x6060604052341561000c57fe5b604051602080610168833981016040528080519060200190919050505b806000819055505b505b610126806100426000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806367e0badb146044578063cd16ecbf146067575bfe5b3415604b57fe5b60516084565b6040518082815260200191505060405180910390f35b3415606e57fe5b60826004808035906020019091905050608f565b005b600060005490505b90565b60006000549050816000819055506000546001026000191681600102600019163373ffffffffffffffffffffffffffffffffffffffff167f108fd0bf2253f6baf35f111ba80fb5369c2e004b88e36ac8486fcee0c87e61ce60405180905060405180910390a45b50505600a165627a7a72305820b86215323334042910c2707668d7cc3c3ec760d2f5962724042482293eba5f6b0029',
       connectedToEthereum: undefined,
       // Holds the accounts
-      accounts: [],
 
       // Holds the filter objects
       filterWatch: undefined,
@@ -34,24 +33,16 @@ class App extends Component {
       contractEventCounter: undefined,
 
 
-      // Maintains the info on node type
-      nodeType: undefined,
 
       // If autoRetrieveFlag is true, it will: auto connect, get accounts, set UI components, get balances
       autoRetrieveFlag: true
 
     }
 
-
     this.startApp = this.startApp.bind(this);    
     this.doConnect = this.doConnect.bind(this);
     this.doFilterStopWatching = this.doFilterStopWatching.bind(this);
     this.doContractEventWatchStop = this.doContractEventWatchStop.bind(this);
-    this.doGetAccounts = this.doGetAccounts.bind(this);
-    this.doGetBalance = this.doGetBalance.bind(this);
-    this.getAccountsandBalances = this.getAccountsandBalances.bind(this);
-
-
     this.setData = this.setData.bind(this);
 
 
@@ -76,26 +67,17 @@ class App extends Component {
   }
 
   startApp() {
-    console.log('this.state.autoRetrieveFlag', this.state.autoRetrieveFlag);
     // If the app is reconnected we should reset the watch
     this.doFilterStopWatching();
     this.doContractEventWatchStop();
 
     // Set the connect status on the app
     if (web3 && web3.isConnected()) {
+      console.log("connected to Ethereum");
       this.setState({ connectedToEthereum: true });
-      // Gets the version data and populates the result UI
-      this.setWeb3Version();
 
-      // no action to be taken if this flag is OFF  
-      // during development for convinience you may set autoRetrieveFlag=true
-      if(this.state.autoRetrieveFlag) {
-        this.doGetAccounts();
-        this.doGetNodeStatus();
-        this.getMiningStatus();
-        this.getSyncingStatus();
-      }
     } else {
+      console.log("NOT connected to Ethereum");
         this.setState({ connectedToEthereum: false });
         return;
     }
@@ -130,102 +112,7 @@ class App extends Component {
     console.log("called doContractEventWatchStop");
   }
 
-  doGetAccounts() {
-    console.log("called doGetAccounts");
-    const that = this;
-    // This is the synch call for getting the accounts
-    var accounts = web3.eth.accounts;
-    console.log('sync accounts', accounts);
   
-    // Asynchronous call to get the accounts
-    // result = [Array of accounts]
-    // MetaMask returns 1 account in the array - that is the currently selected account
-    web3.eth.getAccounts(function (error, result) {
-      if (error) {
-          console.log('accounts_count', error, true);
-      } else {
-        accounts = result;
-        console.log('accounts_count', result.length, false);
-        // You need to have at least 1 account to proceed
-        if(result.length == 0) {
-          if(that.state.nodeType.toLowerCase().includes('metamask')){
-              alert('Unlock MetaMask *and* click \'Get Accounts\'');
-          }
-          return;
-        }
-
-
-
-        // This populates the SELECT boxes with the accounts
-        that.getAccountsandBalances(accounts);
-        
-        // var coinbase = web3.eth.coinbase;
-        // trim it so as to fit in the window/UI
-        // if(coinbase) coinbase = coinbase.substring(0,25)+'...'
-        // setData('coinbase', coinbase, false);
-        // set the default accounts
-        var defaultAccount = web3.eth.defaultAccount;
-        if(!defaultAccount){
-          web3.eth.defaultAccount =  result[0];
-          defaultAccount = '[Undef]' + result[0];
-        }
-
-        defaultAccount = defaultAccount.substring(0,25)+'...';
-        console.log('defaultAccount', defaultAccount, false);
-      }
-        
-    });
-  }
-
-  doGetBalance(account) {
-    const that = this;
-    return new Promise(function(resolve, reject){
-        let balance = web3.eth.getBalance(account,web3.eth.defaultBlock, function(error, result){
-            if (error) {
-                reject('error');
-            } else {
-                let balance = web3.fromWei(result,'ether').toFixed(4);
-                resolve(balance);
-            }
-        })
-    })
-    .then(function(result) {
-        console.log('balance', result);
-        let accountDetails = [account, result];
-        // that.setState({ accounts: [...that.state.accounts, accountDetails] })
-        return (accountDetails);
-    })
-    .catch(function(error) {
-        console.log('error: ', error);
-    }) 
-  }
-
-  getAccountsandBalances(accounts) {
-    const that = this;
-    let account;
-    // for(let i=0; i<accounts.length; i++) {
-    //   account = accounts[i];      
-    //   this.doGetBalance(account);
-    // }
-
-
-    let balancePromises = accounts.map(account => this.doGetBalance(account));
-
-    Promise.all(balancePromises)
-      .then(responses => {
-        // all responses are ready, we can show HTTP status codes
-        // for(let response of responses) {
-        //   alert(`${response.url}: ${response.status}`); // shows 200 for every url
-        // }
-        console.log('promise all responses: ', responses);
-        that.setState({ accounts: [...that.state.accounts, responses] })
-        // return responses;
-      })
-      // map array of responses into array of response.json() to read their content
-      // .then(responses => Promise.all(responses.map(r => r.json())))
-      // all JSON answers are parsed: "users" is the array of them
-      // .then(responses => responses.forEach(account => alert(account)));
-      }
 
   // getBalancePromised = account => new Promise((resolve, reject) => {
   //   web3.eth.getBalance(account, web3.eth.defaultBlock, (error, result) => {
@@ -249,15 +136,15 @@ class App extends Component {
 
 
   setData(docElement, html, errored) {
-    console.log(docElement, html, "error:" + errored); 
+    console.log(docElement, html, "error:" + errored);  
   }
 
   render() {
     return (
       <article>
         <About />
-        <SetupAndVersion state={this.state} reConnect={this.doConnect} getNodeStatus={this.doGetNodeStatus} />
-        <Accounts getAccounts={this.getAccountsandBalances} accounts={this.state.accounts}/>
+        <SetupAndVersion state={this.state} reConnect={this.doConnect}  />
+        <Accounts />
         <LockUnlock />
         <SendTransaction />
         <CompileDeployContract />
