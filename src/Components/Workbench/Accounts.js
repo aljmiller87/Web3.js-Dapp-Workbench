@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import Equalizer from 'react-equalizer';
 
 export default class Accounts extends Component {
 	constructor(props) {
@@ -18,11 +19,14 @@ export default class Accounts extends Component {
 	}
 
 	doGetAccounts() {
-	    console.log("called doGetAccounts");
 	    const that = this;
+	    that.setState({
+	    	accounts: {},
+	    	coinbase: undefined,
+	    	defaultAccount: undefined
+	    });
 	    // This is the synch call for getting the accounts
 	    var accounts = web3.eth.accounts;
-	    console.log('sync accounts', accounts);
 	  
 	    // Asynchronous call to get the accounts
 	    // result = [Array of accounts]
@@ -32,7 +36,6 @@ export default class Accounts extends Component {
 	          console.log('accounts_count', error, true);
 	      } else {
 	        accounts = result;
-	        console.log('accounts_count', result.length, false);
 	        // You need to have at least 1 account to proceed
 	        if(result.length == 0) {
 	          if(that.state.nodeType.toLowerCase().includes('metamask')){
@@ -41,19 +44,19 @@ export default class Accounts extends Component {
 	          return;
 	        }
 
-	        // var coinbase = web3.eth.coinbase;
-	        // trim it so as to fit in the window/UI
-	        // if(coinbase) coinbase = coinbase.substring(0,25)+'...'
-	        // setData('coinbase', coinbase, false);
-	        // set the default accounts
-	        var defaultAccount = web3.eth.defaultAccount;
+	        let coinbase = web3.eth.coinbase;
+	        if(coinbase) {
+	        	that.setState({ coinbase: coinbase })
+	        }
+	        let defaultAccount = web3.eth.defaultAccount;
 	        if(!defaultAccount){
 	          web3.eth.defaultAccount =  result[0];
-	          defaultAccount = '[Undef]' + result[0];
+	          defaultAccount =result[0];
+	          that.setState({ defaultAccount: defaultAccount })
+	        } else {
+	        	that.setState({ defaultAccount: defaultAccount })
 	        }
 
-	        defaultAccount = defaultAccount.substring(0,25)+'...';
-	        console.log('defaultAccount', defaultAccount, false);
 	        that.getAccountsandBalances(accounts);
 	      }
 	        
@@ -73,9 +76,7 @@ export default class Accounts extends Component {
 	        })
 	    })
 	    .then(function(result) {
-	        console.log('balance', result);
 	        let accountDetails = [account, result];
-	        // that.setState({ accounts: [...that.state.accounts, accountDetails] })
 	        return (accountDetails);
 	    })
 	    .catch(function(error) {
@@ -90,7 +91,6 @@ export default class Accounts extends Component {
 
 	    Promise.all(balancePromises)
 	      .then(accounts => {
-	        console.log('promise all responses: ', accounts);
 	        const accountObj = {};
 	        accounts.map(account => {
 	        	let address = account[0];
@@ -100,75 +100,52 @@ export default class Accounts extends Component {
 	        return accountObj;
 	      })
 	      .then(response => {
-	      	console.log('response should be accountObj', response);
 	      	that.setState({ accounts: response })
 	      })
 	}
 
 	render() {
 
-		console.log('Accounts props', this.props);
-		// console.log('ATTENTION: due to props change, need to change this component to stateful and use componentDidUpdate() per https://reactjs.org/docs/react-component.html');
-		// console.log('Accounts props.accounts[0][0]', this.props.accounts[0][0]);
-		let accounts = [];
-		let balances = [];
-		for (let i = 0; i < this.props.accounts; i++) {
-			console.log("testing 123!!!");
-			// console.log('this.props.accounts[i][0]', this.props.accounts[i][0])
-			let account = (
-				<tr>
-					<td>{i + 1}</td>
-					<td>{ this.props.accounts[i][0] }</td>
-				</tr>
-			);
-			console.log('account in for loop', account);
-			accounts.push(account);
-			let balance = (
-				<tr>
-					<td>{i + 1}</td>
-					<td>{ this.props.accounts[i][1] }</td>
-				</tr>
-			);
-			balances.push(balance);
-		}
+		let defaultAccount = (this.state.defaultAccount) ? this.state.defaultAccount : '...';
+		let defaultAccountClass = (this.state.defaultAccount) ? 'success-text' : 'error-text';
+		let coinbase = (this.state.coinbase) ? this.state.coinbase : '...';
+		let coinbaseClass = (this.state.coinbase) ? 'success-text' : 'error-text';
+		let countClass = (Object.keys(this.state.accounts)).length > 0 ? 'success-text' : 'error-text';
+
+		let addressKeys = Object.keys(this.state.accounts);
+		let accounts = addressKeys.map((account, key) => {
+			return (
+				<tr key={key}><td>{account}</td><td>{this.state.accounts[account]}</td></tr>
+			)
+		})
 		return (
-			<div className="hero-unit">
-		    <h1>Accounts</h1>
-		    {/* accounts list */}
-		    <div className="sidekick">
-		      <h1>Accounts</h1>
-		      <p>Count</p><span className='notready' id='accounts_count'>...</span>
-		      <table>
-				<tbody>
-					<tr>
-						<th>Account #</th>
-						<th>Address</th>
-					</tr>
-					{accounts}
-				</tbody>
-			  </table>
-		      <p>Coinbase</p><span className='notready' id='coinbase'>...</span>
-		      <p>Default A/C</p><span className='notready' id='defaultAccount'>...</span>
-		      <ol id="accounts_list">
-		        {/* This is where the accounts will be added */}
-		      </ol>
-		      <span><button onclick="doGetAccounts()">Get Accounts</button></span>
-		    </div>
-		    {/* account balances */}
-		    <div className="sidekick">
-		      <h1>Balances</h1>
-		        {/* This is where the accounts balances will be added */}
-		        <table>
-				<tbody>
-					<tr>
-					  <th>Account #</th>
-					  <th>Balance</th>
-					</tr>
-					{balances}
-				  </tbody>
-			  	</table>
-		    </div>
-		  </div>
+			<section>
+			    <h2>Accounts</h2>
+			    {/* accounts list */}
+			    <Equalizer>
+				    <div className="col-xs-12 col-sm-6">
+				      <h3>Primary Accounts</h3>
+				      <p>Count</p><span className={countClass}>{(Object.keys(this.state.accounts)).length}</span>
+				      <p>Coinbase</p><span className={coinbaseClass} >{coinbase}</span>
+				      <p>Default A/C</p><span className={defaultAccountClass} >{defaultAccount}</span>
+				      <span><button onClick={this.doGetAccounts}>Get Accounts</button></span>
+				    </div>
+				    {/* account balances */}
+				    <div className="col-xs-12 col-sm-6">
+				      <h3>Addresses and Balances</h3>
+				        {/* This is where the accounts balances will be added */}
+				        <table>
+						<tbody>
+							<tr>
+							  <th>Address</th>
+							  <th>Balance</th>
+							</tr>
+							{accounts}
+						  </tbody>
+					  	</table>
+				    </div>
+				</Equalizer>
+			</section>
 		)
 	}
 }

@@ -49,7 +49,6 @@ class App extends Component {
   }
 
   componentWillMount() {
-    console.log("componentWillMount");
       // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
       // Use Mist/MetaMask's provider
@@ -73,7 +72,6 @@ class App extends Component {
 
     // Set the connect status on the app
     if (web3 && web3.isConnected()) {
-      console.log("connected to Ethereum");
       this.setState({ connectedToEthereum: true });
 
     } else {
@@ -97,7 +95,6 @@ class App extends Component {
  */
    doConnect(providerURL) {
     // Get the provider URL
-    console.log("called doConnect");
     window.web3 = new Web3(new Web3.providers.HttpProvider(providerURL));
     this.startApp();
   }
@@ -112,36 +109,13 @@ class App extends Component {
     console.log("called doContractEventWatchStop");
   }
 
-  
-
-  // getBalancePromised = account => new Promise((resolve, reject) => {
-  //   web3.eth.getBalance(account, web3.eth.defaultBlock, (error, result) => {
-  //     if(err){
-  //       return reject(error);
-  //     }
-  //     const balance = web3.fromWei(result, 'ether').toFixed(4);
-  //     resolve(balance);
-  //   })
-  // });
-
-  // async getAccountsandBalances(accounts) {  
-  //   for(const account of accounts) {
-  //     const balance = await getBalancePromised(account);
-      
-  //     console.log(`You account is ${account} and balance is ${balance}`);
-      
-  //     //here do anythin you want with account and balance
-  //   }
-  // }
-
-
   setData(docElement, html, errored) {
     console.log(docElement, html, "error:" + errored);  
   }
 
   render() {
     return (
-      <article>
+      <main>
         <About />
         <SetupAndVersion state={this.state} reConnect={this.doConnect}  />
         <Accounts />
@@ -151,7 +125,7 @@ class App extends Component {
         <ExecuteContractFunction />
         <FilterOptionsWatch />
         <Events />
-    </article>
+    </main>
     );
   }
 }

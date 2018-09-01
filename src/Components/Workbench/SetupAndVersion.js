@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Line, Circle } from 'rc-progress';
+import Equalizer from 'react-equalizer';
 
 
 export default class SetupAndVersion extends Component {
@@ -26,6 +27,7 @@ export default class SetupAndVersion extends Component {
       this.doGetNodeStatus();
       this.getMiningStatus();
       this.getSyncingStatus();
+      this.setWeb3Version();
     }
 
   }
@@ -42,7 +44,6 @@ export default class SetupAndVersion extends Component {
       })
     })
     .then(function(result) {      
-      console.log('web3 version: ', result);      
       that.setState({ nodeType: result });
     })
     .catch(function(error) {
@@ -95,7 +96,6 @@ export default class SetupAndVersion extends Component {
         console.log("syncing error: ", error);
         that.setState({syncingStatus: error});
       } else {
-        console.log("syncing result: ", result);
         that.setState({syncingStatus: result});
       }
     });
@@ -131,11 +131,11 @@ export default class SetupAndVersion extends Component {
   render() {
     // console.log('SetupAndVersion this.props', this.props);
     let connectStatus = this.state.connectedToEthereum = true ? 'Connected To Ethereum' : 'Not Connected';
-    let connectStatusClass = this.state.connectedToEthereum = true ? 'ready' : 'notready';
+    let connectStatusClass = this.state.connectedToEthereum = true ? 'success-text' : 'error-text';
     let getPeerCount = this.state.peerCount == undefined ? 'No peers' : this.state.peerCount;
-    let getPeerCountClass = this.state.peerCount == undefined ? 'notready' : 'ready';
+    let getPeerCountClass = this.state.peerCount == undefined ? 'error-text' : 'success-text';
     let nodeVersion = this.state.nodeType == undefined ? 'Not connected' : this.state.nodeType;
-    let nodeVersionClass = this.state.nodeType == undefined ? 'notready' : 'ready';
+    let nodeVersionClass = this.state.nodeType == undefined ? 'error-text' : 'success-text';
     let miningStatus = this.state.miningStatus == false ? 'Not Mining' : 'Mining';
     let syncingStatus = this.state.syncingStatus == undefined ? 'Not Syncing' : 'Syncing';
     let line = '';
@@ -152,41 +152,40 @@ export default class SetupAndVersion extends Component {
     }
 
 		return (
-			<div className="hero-unit">
-        <h1>Connect</h1>
-
-        {/* setup section  */}
-        <div className="sidekick">
-          <h1>Setup</h1>
-          <p className={connectStatusClass} id='connect_status'>{connectStatus}</p>
-          <span>Provider</span>
-          <span><input type='text' id='provider_url' defaultValue='http://localhost:8545'/></span>
-          <span>
-            <button onClick={this.props.reConnect}>Connect</button>
-          </span>
-        </div>
-        {/* version */}
-        <div className="sidekick">
-          <h1>Version</h1>
-          <p className={nodeVersionClass} id='version_information'>{this.state.nodeType}</p>
-        </div>
-        <div className="sidekick">
-          <h1>Status</h1>
-          <h3>Peers</h3>
-          <p>
-            <button onClick={this.props.getNodeStatus}>Node Status</button>
-          </p>
-          <p id="get_peer_count" className={getPeerCountClass}>Peers: {this.state.peerCount}</p>
-          <h3>Mining</h3>
-          <p>Mining Status: {miningStatus}</p>
-          <h3>Syncing</h3>
-          <p>Status: {syncingStatus}</p>
-          <p>Current Block: {numberWithCommas(currentBlock)}</p>
-          <p>Highest Block: {numberWithCommas(highestBlock)}</p>
-          <p>Syncing Status: {syncingStatus} {(currentBlock/highestBlock*100).toFixed(2)} %</p>
-          {line}
-        </div>
-      </div>
+			<section>
+        <h2>Connect</h2>
+        <Equalizer>
+          {/* setup section  */}
+          <div className="col-xs-12 col-sm-6">
+            <h3>Setup</h3>
+            <p className={connectStatusClass} id='connect_status'>{connectStatus}</p>
+            <span>Provider</span>
+            <span><input type='text' id='provider_url' defaultValue='http://localhost:8545'/></span>
+            <span>
+              <button onClick={this.props.reConnect}>Connect</button>
+            </span>
+          {/* version */}
+            <h3>Version</h3>
+            <p className={nodeVersionClass} id='version_information'>{this.state.nodeType}</p>
+          </div>          
+          <div className="col-xs-12 col-sm-6">
+            <h3>Status</h3>
+            <h3>Peers</h3>
+            <p>
+              <button onClick={this.props.getNodeStatus}>Node Status</button>
+            </p>
+            <p id="get_peer_count" className={getPeerCountClass}>Peers: {this.state.peerCount}</p>
+            <h3>Mining</h3>
+            <p>Mining Status: {miningStatus}</p>
+            <h3>Syncing</h3>
+            <p>Status: {syncingStatus}</p>
+            <p>Current Block: {numberWithCommas(currentBlock)}</p>
+            <p>Highest Block: {numberWithCommas(highestBlock)}</p>
+            <p>Syncing Status: {syncingStatus} {(currentBlock/highestBlock*100).toFixed(2)} %</p>
+            {line}
+          </div>
+        </Equalizer>
+      </section>
     )
   }
 }
