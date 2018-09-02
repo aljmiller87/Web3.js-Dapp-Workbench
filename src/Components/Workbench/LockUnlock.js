@@ -54,7 +54,6 @@ export default class LockUnlock extends Component {
 	}
 
 	setSelectedAccount(event) {
-		console.log('ref ', this.password.value);
 		this.setState({selectedAccount: event.target.value});	
 	}
 
@@ -70,9 +69,7 @@ export default class LockUnlock extends Component {
 				that.setState({ accountResponse: {error: error.message} });
 			} else if (result) {
 				let prevStateAccounts = (that.state.accounts);
-				console.log('prevStateAccounts before', prevStateAccounts);
 				prevStateAccounts[account] = 'Unlocked';
-				console.log('prevStateAccounts after', prevStateAccounts)
 				that.setState({ prevStateAccounts })
 	            that.setState({ accountResponse: {success: "Account is unlocked" } });
 			}

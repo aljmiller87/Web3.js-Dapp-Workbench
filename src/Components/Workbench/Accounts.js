@@ -8,17 +8,17 @@ export default class Accounts extends Component {
 			accounts: {}
 		}
 
-		this.doGetAccounts = this.doGetAccounts.bind(this);
-	    this.doGetBalance = this.doGetBalance.bind(this);
+		this.getAccounts = this.getAccounts.bind(this);
+	    this.getBalance = this.getBalance.bind(this);
 	    this.getAccountsandBalances = this.getAccountsandBalances.bind(this);
 
 	}
 
 	componentWillMount() {
-		this.doGetAccounts();
+		this.getAccounts();
 	}
 
-	doGetAccounts() {
+	getAccounts() {
 	    const that = this;
 	    that.setState({
 	    	accounts: {},
@@ -63,7 +63,7 @@ export default class Accounts extends Component {
 	    });
 	 }
 
-	doGetBalance(account) {
+	getBalance(account) {
 	    const that = this;
 	    return new Promise(function(resolve, reject){
 	        let balance = web3.eth.getBalance(account,web3.eth.defaultBlock, function(error, result){
@@ -87,7 +87,7 @@ export default class Accounts extends Component {
 	getAccountsandBalances(accounts) {
 	    const that = this;
 
-	    let balancePromises = accounts.map(account => this.doGetBalance(account));
+	    let balancePromises = accounts.map(account => this.getBalance(account));
 
 	    Promise.all(balancePromises)
 	      .then(accounts => {
@@ -128,7 +128,7 @@ export default class Accounts extends Component {
 				      <p>Count</p><span className={countClass}>{(Object.keys(this.state.accounts)).length}</span>
 				      <p>Coinbase</p><span className={coinbaseClass} >{coinbase}</span>
 				      <p>Default A/C</p><span className={defaultAccountClass} >{defaultAccount}</span>
-				      <span><button onClick={this.doGetAccounts}>Get Accounts</button></span>
+				      <span><button onClick={this.getAccounts}>Get Accounts</button></span>
 				    </div>
 				    {/* account balances */}
 				    <div className="col-xs-12 col-sm-6">
